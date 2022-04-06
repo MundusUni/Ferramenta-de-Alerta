@@ -1,0 +1,49 @@
+body {
+    background: rgb(99, 134, 65);
+    font: normal 15pt Arial;
+    
+}
+
+div {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    width: 600px;
+    margin: auto;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.295);
+    text-align: center;
+    
+}
+
+
+
+table {
+    border: auto;
+    border-radius: 10px 5px 5px 5px;
+    border-bottom: 5px ;
+    padding: px;
+    width: 150px;
+    margin: 10px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.295);
+    text-align: center;
+    font: normal 12pt Arial;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#thead {
+    background: rgb(185, 174, 174);
+    
+}
+
+#corpoDaTabela {
+    background: white;
+    gap:10px, 20px;;
+}
+
+footer {
+    color: white;
+    text-align: center;
+    font-style: italic;
+}
+

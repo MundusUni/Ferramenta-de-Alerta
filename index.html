@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+    <div id="div1">
+        <h1>Ferramenta de Alerta</h1>
+        <p>Esta ferramenta permite gerar alertas para as moedas da Binance</p>
+    </div>
+    <br>
+    <div>
+        <select name="moedas" onchange="apresentarPrecos()" id="moedas">
+            <option value="ETHBTC">ETHBTC</option>
+        </select>
+        <select name="preco" id="preco">
+            <option value="preco">Preço</option>
+        </select>
+        <select name="moedaNativa" onchange="desligarInputsMoedas()" id="moedaNativa">
+            <option value="USDT">USDT</option>
+            <option value="Nativo">Nativo</option>
+        </select>
+        <select name="operacao" onchange="desligarInputsOperacoes()" id="operacao">
+            <option value="Maior Que">Maior Que</option>
+            <option value="Menor Que">Menor Que</option>
+            <option value="Dentro do Canal">Dentro do Canal</option>
+            <option value="Fora do Canal">Fora do Canal</option>
+        </select>
+        <br>
+        <input id="preco1usdt" type="text" placeholder="Preço em USDT - 1"></input>
+        <input id="preco1nativo" type="text" placeholder="Preço 1 (Nativo)"></input>
+        <br>
+        <input id="preco2usdt" type="text" placeholder="Preço em USDT - 2"></input>
+        <input id="preco2nativo"  type="text" placeholder="Preço 2 (Nativo)"></input>
+        <br><br>
+        <button onclick="adicionarTabela()">Adicionar Alarme</button>
+    </div>
+    <table id="table">
+        <thead id="thead">
+            <tr>
+                <th>Selecionar</th>
+                <th>Simbolo</th>
+                <th>Alerta em</th>
+                <th>Moeda</th>
+                <th>Condição</th>
+                <th>Preço 1</th>
+                <th>Preço 2</th>
+            </tr>
+        </thead>
+        <tbody id="corpoDaTabela">  <!--Os tableRow's abaixo são ativados para fins de teste somente-->
+            <!-- <tr id="tableRow">    
+                <td><input type="checkbox" id="checkbox"></td>
+                <td id="moeda">ETHBTC</td>
+                <td id="price">Price</td>
+                <td id="paridade">USDT</td>
+                <td id="operacao">Dentro do Canal</td>
+                <td id="preco1">10000</td>
+                <td id="preco2">1000</td>
+            </tr>
+            <tr id="tableRow">
+                <td><input type="checkbox" id="checkbox"></td>
+                <td id="moeda">LTCBTC</td>
+                <td id="price">Price</td>
+                <td id="paridade">USDT</td>
+                <td id="operacao">Dentro do Canal</td>
+                <td id="preco1">12000</td>
+                <td id="preco2">2000</td>
+            </tr>
+            <tr id="tableRow">
+                <td><input type="checkbox" id="checkbox"></td>
+                <td id="moeda">BNBBTC</td>
+                <td id="price">Price</td>
+                <td id="paridade">USDT</td>
+                <td id="operacao">Fora do Canal</td>
+                <td id="preco1">13000</td>
+                <td id="preco2">3000</td>
+            </tr>
+            <tr id="tableRow">
+                <td><input type="checkbox" id="checkbox"></td>
+                <td id="moeda">NEOBTC</td>
+                <td id="price">Price</td>
+                <td id="paridade">USDT</td>
+                <td id="operacao">Menor Que</td>
+                <td id="preco1">14000</td>
+                <td id="preco2">0</td>
+            </tr>
+            <tr id="tableRow">
+                <td><input type="checkbox" id="checkbox"></td>
+                <td id="moeda">QTUMETH</td>
+                <td id="price">Price</td>
+                <td id="paridade">USDT</td>
+                <td id="operacao">Maior Que</td>
+                <td id="preco1">15000</td>
+                <td id="preco2">0</td>
+            </tr> -->
+        </tbody>
+    </table>
+    <blank></blank>
+    <div>
+        <button onclick="deletarTabela()">Deletar Selecionados</button>
+    </div>
+
+
+
+    
+</body>
+<script>
+
+
+
+var lista // Esta variável, após ter sido executada a função carregarMoedas(), contem todos os preços e simbolos de todas as moedas da binance
+var precoEmUsdt // Esta variável, após a função apresentarPrecos() executada no HTML, contém o preço em USDT da moeda atualmente selecionada
+var moedaSelecionada //Esta variável é a moeda atualmente selecionada pelo usuário
+var tabela // Esta variável contém todos os dados contidos na Tabela que contem os alarmes
+var dadosBinance// Esta variável contem todos os preços e símbolos da Binance, e permite fácil acesso das mesmas
+
+let preco1nativo = document.getElementById('preco1nativo')
+let preco2nativo = document.getElementById('preco2nativo')
+let preco1usdt = document.getElementById('preco1usdt')
+let preco2usdt = document.getElementById('preco2usdt')
+let moedas = document.getElementById('moedas')
+let selectOperacao = document.getElementById("operacao")
+let selectMoeda = document.getElementById("moedaNativa")
+let corpoDaTabela = document.getElementById("corpoDaTabela")
+let table = document.getElementById("table")
+
+
+
+carregarMoedas()
+desligarDefault()
+timerDoCriarPrecos()
+setTimeout(timerDoNucleoDoAlarme, 5*1000) // Intervalo para as funções assincronas anteriores pegarem os dados necessários para a próxima função
+
+
+
+function timerDoCriarPrecos(){ // Esta função roda a cada dois segundos a função que atualiza a lista de moedas e preços das moedas
+    criarJsonDosPrecos()
+    setTimeout(timerDoCriarPrecos, 2*1000)
+}
+
+
+
+
+function timerDoNucleoDoAlarme(){ // Esta função executa o alarme
+    nucleoDoAlarme()
+    setTimeout(timerDoNucleoDoAlarme, 2*1000)
+}
+
+
+
+function criarJsonDosPrecos() { // Esta função atualiza a lista de moedas e preços das moedas utilizado pelo programa.
+    fetch("https://api.binance.com/api/v3/ticker/price")
+    .then(response => response.json())
+    .then(function(data){
+        var dadosBinanceLocal = new Object()
+        for(i=0;i<data.length;i++){
+            dadosBinanceLocal[data[i]["symbol"]] = data[i]["price"]
+        }
+        dadosBinance = dadosBinanceLocal // Aqui se passam os dados da função assincrona, para a variável global, para não dar erro nas outras funções dependentes dela.
+})}
+
+
+
+function carregarMoedas() { // Esta função carrega a lista de moedas no menu select ao carregar a página, e em seguida chama a próxima função
+    fetch("https://api.binance.com/api/v3/ticker/price")
+    .then(response => response.json())
+    .then(function(data){
+        const dataMoedas = (data) => {
+            moedas.innerHTML = ""
+            var list = "";
+            for(let i=0; i<data.length; i++){
+                list += `<option value="${data[i].symbol}">${data[i].symbol}</option>`;
+            }
+            moedas.innerHTML = list  
+        }
+        dataMoedas(data)
+        lista = data
+        apresentarPrecosDefault()
+    })}
+
+
+
+function apresentarPrecosDefault() { // Esta função garante que o preço nativo da primeira moeda da lista seja mostrado ao carregar a página
+    fetch("https://api.binance.com/api/v3/ticker/price")
+    .then(response => response.json())
+    .then(function(data){preco1nativo.value = data[0].price})
+    moedaSelecionada = lista[0].symbol
+    apresentarPrecosEmUsdt()
+} 
+
+
+
+function apresentarPrecos() { // Quando o usuario seleciona uma moeda no select, Esta função define a var moedaSelecionada como a moeda selecionada pelo usuario, e mostra o preço Nativo desta moeda na tela
+    moedaSelecionada = moedas.options[moedas.selectedIndex].value;
+    lista.forEach(object =>{
+    if(object.symbol === moedaSelecionada){
+        preco1nativo.value = object.price
+        apresentarPrecosEmUsdt()
+}});}
+
+
+
+function apresentarPrecosEmUsdt() { // Esta função converte a moeda selecionada pelo usuario em sua versão com paridade em USDT. ex:  BTCETH vira BTCUSDT.
+    var ultimos4PedacosDaMoeda = moedaSelecionada.substr(moedaSelecionada.length - 4);
+    var ultimos3PedacosDaMoeda = moedaSelecionada.substr(moedaSelecionada.length - 3);
+    switch (ultimos4PedacosDaMoeda) {
+        case "USDT": case "USDC": case "BUSD": case "USDS": case "BKRW": case "IDRT": case "BIDR": case "BVND": case "GYEN": case "DOGE":
+        converterEmUsdt(4)
+            break 
+        default:
+            switch (ultimos3PedacosDaMoeda) {
+                case "BTC": case "ETH": case "BNB": case "USD": case "PAX": case "XRP": case "TRX": case "NGN": case "RUB": case "TRY": case "EUR": case "ZAR": case "GBP": case "UAH": case "AUD": case "DAI": case "BRL": case "VAI": case "UST": case "DOT":
+                converterEmUsdt(3)
+                    break
+                default:
+                    console.log("Não é nenhuma moeda...")
+                    break
+            }
+            break
+}}
+
+
+
+function converterEmUsdt(n){ // Esta função converte a moeda escolhida pelo usuário em USDT e mostra o valor no input
+    fetch("https://api.binance.com/api/v3/ticker/price?symbol=" + moedaSelecionada.substr(0, moedaSelecionada.length - n) + "USDT")
+    .then(response => response.json())
+    .then(function(data){
+        moedaEmUsdt(data)
+    })
+    .catch(error => {
+        preco1usdt.value = "Preço não Disponível em USDT"
+    })
+    const moedaEmUsdt = (data) => {
+        preco1usdt.value = data.price
+}}
+
+
+
+function desligarDefault(){ // Esta função desabilita os campos desnecessários ao carregar a página
+    document.getElementById("preco2usdt").disabled = true;
+    document.getElementById("preco1nativo").disabled = true;
+    document.getElementById("preco2nativo").disabled = true;
+}
+
+
+
+function desligarInputsMoedas(){ // Esta função ativa ou desativa os inputs para as moedas quando se altera o item selecionado no Select Usdt/Nativo    
+    if(selectMoeda.value == 'USDT'){
+        preco1nativo.disabled = true;
+        preco1usdt.disabled = false;
+        if(selectOperacao.value == 'Maior Que' || selectOperacao.value == 'Menor Que'){
+            preco2nativo.disabled = true;
+            preco2usdt.disabled = true;
+        } else {
+            preco2nativo.disabled = true;
+            preco2usdt.disabled = false
+        } 
+    } else {
+        preco1nativo.disabled = false;
+        preco1usdt.disabled = true;
+        if(selectOperacao.value == 'Maior Que' || selectOperacao.value == 'Menor Que'){
+            preco2usdt.disabled = true;
+            preco2nativo.disabled = true;
+        } else {
+            preco2usdt.disabled = true;
+            preco2nativo.disabled = false;
+}}}
+    
+
+
+function desligarInputsOperacoes(){ // Esta função ativa ou desativa os inputs para as moedas quando se altera o item selecionado no Select Maior Que/Menor Que/etc.
+    if(selectOperacao.value == 'Maior Que' || selectOperacao.value == 'Menor Que'){
+        preco2nativo.disabled = true;
+        preco2usdt.disabled = true;
+    } else {
+        if(selectMoeda.value == 'USDT'){
+            preco2usdt.disabled = false;
+        } else {
+            preco2nativo.disabled = false;
+}}}
+
+
+
+function adicionarTabela() { // Esta função cria fileiras novas na tabela, com base nos inputs acima
+    function executar() {
+        var fileira = corpoDaTabela.insertRow(-1)
+        fileira.setAttribute("id", "tableRow")
+        var celula1 = fileira.insertCell(0)
+        var celula2 = fileira.insertCell(1)
+        var celula3 = fileira.insertCell(2)
+        var celula4 = fileira.insertCell(3)
+        var celula5 = fileira.insertCell(4)
+        var celula6 = fileira.insertCell(5)
+        var celula7 = fileira.insertCell(6)
+        celula1.innerHTML = `<input type="checkbox" id="checkbox">`
+        celula2.innerHTML = moedas.value
+        celula2.setAttribute("id", "moeda")
+        celula3.innerHTML = "Price"
+        celula3.setAttribute("id", "price")
+        celula4.innerHTML = selectMoeda.value
+        celula4.setAttribute("id", "paridade")
+        celula5.innerHTML = selectOperacao.value
+        celula5.setAttribute("id", "operacao")
+        if (selectMoeda.value == "USDT") {celula6.innerHTML = preco1usdt.value} else {celula6.innerHTML = preco1nativo.value}
+        celula5.setAttribute("id", "preco1")
+        if (selectMoeda.value == "USDT") {celula7.innerHTML = preco2usdt.value} else {celula7.innerHTML = preco2nativo.value}
+        celula6.setAttribute("id", "preco2")
+    }
+    executar()
+
+/*
+    const input1 = preco2usdt.value < preco1usdt.value
+    if (preco1usdt.enabled && preco2usdt.enabled && input1) {
+        alert("Segundo preço menor que o primeiro, favor corrigir e tentar adicionar novo alarme novamente")
+    } else if (preco1usdt.enabled && preco2usdt.disabled && preco2nativo.value < preco1nativo.value ){
+        alert("NATIVO")
+    }
+
+    else {
+        executar()
+    }
+*/
+    
+    /*
+    if (preco1usdt.value < preco2usdt.value)  {  
+        executar()
+    } else if (preco1nativo.value < preco2nativo.value) {
+        executar()
+    } else if (preco1nativo.disabled && preco1usdt.value <= 0) {
+        alert("Favor preencher o campo do primeiro preço")
+    } else if (preco1usdt.disabled && preco1nativo <= 0) {
+            alert("Favor preencher o campo do primeiro preço")
+    }else if (preco2usdt.disabled && preco2nativo.disabled) {
+        executar()
+    } else if (preco2usdt.value <= 0 && preco2nativo.value <= 0) {
+        alert("Favor preencher o campo do segundo preço")
+    } else {
+        alert("Segundo preço menor que o primeiro, favor corrigir e tentar adicionar novo alarme novamente") 
+    }*/
+
+}
+
+
+
+function deletarTabela() { // Esta função deleta as fileiras selecionadas
+    let indiceRowsPraDeletar = []
+    let checkbox = document.querySelectorAll('#checkbox')
+    checkbox.forEach(input => {
+        if (input.checked) {
+            var index = Number(input.closest("#tableRow").rowIndex)
+            indiceRowsPraDeletar.push(index)
+    }})
+    indiceRowsPraDeletar.reverse()
+    for (i=0; i<indiceRowsPraDeletar.length; i++) {
+        corpoDaTabela.deleteRow(indiceRowsPraDeletar[i]-1)
+}}
+ 
+
+
+function nucleoDoAlarme() {
+    var tabela = document.getElementById('table')
+    for (i=1; i<tabela.rows.length; i++) {
+
+    
+    const moeda = tabela.rows[i].cells[1].innerHTML
+    const operacao = tabela.rows[i].cells[4].innerHTML
+    const preco1 = tabela.rows[i].cells[5].innerHTML
+    const preco2 = tabela.rows[i].cells[6].innerHTML
+
+
+	switch (operacao) {
+		case "Maior Que" :
+			if (preco1 < dadosBinance[moeda]) {
+			console.log("O Preço do " + moeda + " está acima de " + preco1 + ".")
+			}
+		break
+		case "Menor Que" :
+			if (preco1 > dadosBinance[moeda]) {
+			console.log("O Preço do " + moeda + " está abaixo de " + preco1 + ".")
+			}
+		break
+		case "Dentro do Canal" :
+			if (preco1 < dadosBinance[moeda] && preco2 > dadosBinance[moeda]) {
+			console.log("A Moeda " + moeda + " entrou no canal.")
+			}
+		break
+		case "Fora do Canal" :
+			if (preco1 > dadosBinance[moeda] || preco2 < dadosBinance[moeda]) {
+			console.log("A Moeda " + moeda + " saiu do canal.")
+			}
+		break
+	}
+}
+console.log("----------")
+}
+
+
+
+</script>
+</html>
